@@ -6,7 +6,7 @@ from utils.xmlparser import get_bboxes, get_all_classes
 from PIL import Image
 from torch.utils.data import Dataset
 from sklearn.preprocessing import LabelEncoder
-
+from torchvision.transforms.functional import resize, to_tensor
 class VOCLemon(Dataset):
     def __init__(self, 
                  image_list_path : str | Path, 
@@ -36,6 +36,18 @@ class VOCLemon(Dataset):
         target = dict()
         target['boxes'] = bboxes
         target['labels'] = names
+
         img = Image.open(self.image_path / (img_name)).convert('RGB')
-        
-        return torchvision.transforms.functional.pil_to_tensor(img), target
+        img = to_tensor(img)
+        #img = torchvision.transforms.functional.pil_to_tensor(img)
+        old_w, old_h = img.shape[1], img.shape[2]
+        img = resize(img, size=1000)
+        new_w, new_h = img.shape[1], img.shape[2]
+        n_bboxes = target['boxes'].shape[0]
+        for idx in range(n_bboxes):
+            target['boxes'][idx, 0::2] *= new_w/old_w
+            target['boxes'][idx, 1::2] *= new_h/old_h
+        return img, target
+    
+    def get_label_from_encoding(self, cls_id : int) -> str:
+        return self.label_encoder.inverse_transform([cls_id])[0]
