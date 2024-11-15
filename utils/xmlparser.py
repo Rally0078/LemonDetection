@@ -4,10 +4,18 @@ from pathlib import Path
 from typing import Tuple
 import torch
 
-def get_bboxes(xml_path : str | Path ) -> Tuple[str, list[str], np.ndarray]:
+def get_bboxes(xml_path : str | Path ) -> Tuple[str, list[str], torch.FloatTensor]:
     """
-    Input: xml_path : string or Path object to the XML file
-    Output: a Numpy array containing all the bounding boxes in x1,y1, x2,y2 format(4 corners)
+    ### Parameters
+        xml_path : str | Path 
+                - string or Path object to the XML file
+    ### Returns
+
+        str - string containing image name
+
+        list[str] - List of strings containing class names
+
+        a PyTorch Tensor containing all the bounding boxes in x1, y1, x2, y2 format (4 corners)
     """
     parsed_xml = ET.parse(xml_path)
     root = parsed_xml.getroot()
@@ -35,7 +43,6 @@ def get_all_classes(xml_path : str | Path) -> set[str]:
     unique_classes = set()
     parsed_xml = ET.parse(xml_path)
     root = parsed_xml.getroot()
-    #b = root.findall('object')
     for boxes in root.iter('object'):
         unique_classes.add(boxes.find('name').text)
     return unique_classes
